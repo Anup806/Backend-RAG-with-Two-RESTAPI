@@ -6,7 +6,7 @@ class Settings(BaseSettings):
 
     GROQ_API_KEY: str
     QDRANT_URL: str = "http://localhost:6333"
-    QDRANT_COLLECTION: str = "palm_mind_docs"
+    QDRANT_COLLECTION: str = "backend_rag_docs"
     REDIS_URL: str = "redis://localhost:6379"
     SQLITE_URL: str = "sqlite:///./palm_mind.db"
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
