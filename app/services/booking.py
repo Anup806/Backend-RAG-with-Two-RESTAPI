@@ -44,6 +44,19 @@ def detect_booking(user_message: str) -> dict:
         - {"booking": null}
     """
     client = _get_groq()
+    
+    history_text = ""
+    
+    if chat_history:
+        recent = chat_history[-8:]  # last 4 turns
+        history_text = "\n".join(f"{m['role']}: {m['content']}" for m in recent)
+
+    user_content = (
+        f"Conversation history:\n{history_text}\n\nLatest message: {user_message}"
+        if history_text
+        else user_message
+    )
+
     response = client.chat.completions.create(
         model=settings.GROQ_MODEL,
         messages=[
