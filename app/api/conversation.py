@@ -70,7 +70,7 @@ async def chat_message(
 
     booking_confirmed: dict | None = None
 
-    if extracted["intent"] or has_new_field or has_existing_progress:
+    if extracted["intent"] or has_new_field:
         # Merge: a newly-extracted field overwrites/fills the pending slot;
         # otherwise keep whatever was already collected.
         merged: dict[str, str | None] = {
