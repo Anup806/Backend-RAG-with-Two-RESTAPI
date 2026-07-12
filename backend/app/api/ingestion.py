@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from qdrant_client.http.exceptions import ResponseHandlingException
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.db.crud import save_document_metadata
 from app.db.database import get_db
 from app.services.chunker import chunk_text
@@ -15,7 +16,7 @@ from app.services.vector_store import store_chunks
 
 router = APIRouter(prefix="/ingest", tags=["Document Ingestion"])
 
-UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR = Path(settings.UPLOAD_DIR)
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 ALLOWED_EXTENSIONS: set[str] = {"pdf", "txt"}

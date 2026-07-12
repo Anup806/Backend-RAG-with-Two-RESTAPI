@@ -1,4 +1,10 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
+
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 class Settings(BaseSettings):
@@ -8,15 +14,16 @@ class Settings(BaseSettings):
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_COLLECTION: str = "backend_rag_docs"
     REDIS_URL: str = "redis://localhost:6379"
-    SQLITE_URL: str = "sqlite:///./rag_backend.db"
+    SQLITE_URL: str = f"sqlite:///{(BACKEND_DIR / 'rag_backend.db').as_posix()}"
     EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
     GROQ_MODEL: str = "llama-3.1-8b-instant"
     CHUNK_SIZE: int = 500
     CHUNK_OVERLAP: int = 50
     TOP_K: int = 5
+    UPLOAD_DIR: str = str(REPO_ROOT / "uploads")
 
     class Config:
-        env_file = ".env"
+        env_file = str(REPO_ROOT / ".env")
 
 
 settings = Settings()
