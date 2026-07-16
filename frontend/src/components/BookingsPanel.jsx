@@ -55,7 +55,7 @@ export default function BookingsPanel() {
         {groups.map(([sessionId, group]) => (
           <div className="booking-group" key={sessionId}>
             <div className="booking-group-header">
-              <span className="session-pill">Session: {sessionId.slice(0, 8)}…</span>
+              <span className="session-pill">Session: {sessionId}</span>
               <button type="button" onClick={() => handleDeleteSession(sessionId)}>
                 Delete all ({group.length})
               </button>
