@@ -45,7 +45,7 @@ The frontend never talks to Qdrant, Redis, or Groq directly — everything is me
 | Layer              | Tool                               |
 | ------------------ | ----------------------------------- |
 | Frontend framework | React 18 + Vite                     |
-| Frontend styling   | Plain CSS (no UI framework)         |
+| Frontend styling   | Plain CSS (no UI framework), Source Serif 4 / Inter / IBM Plex Mono via Google Fonts |
 | HTTP client        | Native `fetch` + `XMLHttpRequest`* |
 | Web framework      | FastAPI + Uvicorn                   |
 | Vector database    | Qdrant (Docker)                     |
@@ -199,9 +199,20 @@ If `session_id` is omitted, one is generated and returned. If the message contai
 {
   "session_id": "abc-123-...",
   "response": "The refund policy states that...",
-  "booking": null
+  "booking": null,
+  "sources": [
+    { "filename": "refund_policy.pdf", "snippet": "Refunds are issued within 14 days of purchase, provided…", "score": 0.812 },
+    { "filename": "terms.docx", "snippet": "All monetary refunds are processed via the original payment method…", "score": 0.734 }
+  ]
 }
 ```
+
+`sources` is always present, but it's only ever populated on a genuine retrieval answer:
+
+- **Booking-flow turns** (collecting fields or confirming a booking) always return `sources: []` — a booking confirmation isn't grounded in a document, so it shouldn't claim to be.
+- **The "I don't have information about that in the uploaded documents" fallback** also returns `sources: []`, even though chunks were retrieved. Citing chunks the model explicitly said it couldn't answer from would misrepresent "I don't know" as a grounded answer.
+- Each entry is deduplicated to one per source file — the file's highest-scoring chunk — and sorted by score descending.
+- Sources are **not** persisted to Redis history. `memory.py` only stores `role`/`content` per turn, so refreshing the page loses the citation chips on older messages even though the reply text remains.
 
 #### `GET /chat/history/{session_id}`
 Full conversation history for a session, from Redis.
@@ -297,24 +308,3 @@ docker compose down -v     # also wipe Qdrant vectors and Redis sessions
 ```
 
 ---
-
-## Known Limitations
-
-Being upfront about what this project doesn't do yet:
-
-- **No automated tests** — no pytest suite for the backend, no component tests for the frontend.
-- **Filename sanitization gap** — `ingestion.py` writes uploads to disk using the raw client-supplied filename. A crafted filename (e.g. containing `../`) is a path-traversal risk that isn't currently mitigated.
-- **Delete-by-session, not by booking** — `DELETE /chat/bookings/{session_id}` removes every booking for a session at once. The frontend groups bookings by session to make this visible, but a real fix would add a `DELETE /chat/bookings/booking/{id}` endpoint for single-row deletes.
-- **Evaluation is keyword-match only** — retrieval quality isn't measured with a real framework like RAGAS yet; there's no faithfulness/relevancy scoring.
-- **SQLite** — fine for a single-instance dev setup, not for concurrent multi-instance production writes.
-- **No auth** — anyone who can reach the API can upload documents, read any session's history, or delete any session's bookings. Session IDs are the only boundary, and they're stored in `localStorage`, not an httpOnly cookie.
-
----
-
-## Future Improvements
-
-- Swap keyword-match accuracy for RAGAS (faithfulness, answer relevancy, context precision/recall).
-- Add authentication and per-user document scoping.
-- Add a `DELETE /chat/bookings/booking/{id}` endpoint for single-row deletion.
-- Sanitize uploaded filenames (e.g. UUID-based storage names, keep original name only in metadata).
-- Add hybrid search / reranking on top of the current dense-vector-only retrieval in Qdrant.
