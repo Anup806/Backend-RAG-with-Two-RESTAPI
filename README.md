@@ -1,4 +1,4 @@
-# Backend RAG with Two REST APIs
+# Grounded Rag Assistant with Two REST APIs
 
 A full-stack Retrieval-Augmented Generation (RAG) system: a FastAPI backend exposing two REST APIs (document ingestion and conversational RAG with LLM-powered interview booking), and a React frontend that drives every endpoint.
 
