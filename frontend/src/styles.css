@@ -1,3 +1,13 @@
+/* ─────────────────────────────────────────────────────────────────────
+   RAG Console — visual redesign
+   Direction: reference-catalog / archive aesthetic. Light paper surface,
+   serif display + mono utility type, folder-style tabs, a stamped
+   session marker. Chosen because the product's job is retrieval from a
+   document index — the visual language should feel like a well-kept
+   catalog, not a generic dark AI dashboard.
+   Every class name below is unchanged from the original stylesheet —
+   only the visual system changed, so no .jsx file needed to be touched.
+   ───────────────────────────────────────────────────────────────────── */
 
 @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -333,6 +343,24 @@ button:disabled {
 .message-failed .message-role {
   color: var(--danger);
   opacity: 1;
+}
+
+.sources-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 9px;
+}
+
+.source-chip {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+  border: 1px dashed var(--line);
+  border-radius: 3px;
+  padding: 3px 8px;
+  cursor: default;
+  background: var(--surface);
 }
 
 .chat-input-row {
