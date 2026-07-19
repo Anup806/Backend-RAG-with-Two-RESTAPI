@@ -12,8 +12,23 @@ If the answer is not found in the context, say exactly:
 "I don't have information about that in the uploaded documents."
 Never make up information. Be concise and factual."""
 
+# Exact fallback string the model is instructed to use above. Checked verbatim
+# so we don't attach citations to an answer that wasn't actually grounded.
+_NO_INFO_ANSWER = "I don't have information about that in the uploaded documents."
+
 # Max history turns to include in the prompt (each turn = 1 user + 1 assistant message)
 _MAX_HISTORY_TURNS = 3
+
+# How much of a chunk's text to surface as a citation preview
+_SNIPPET_MAX_CHARS = 160
+
+
+def _make_snippet(text: str, max_chars: int = _SNIPPET_MAX_CHARS) -> str:
+    """Trim a chunk's text to a short, UI-friendly preview."""
+    cleaned = " ".join(text.split())
+    if len(cleaned) <= max_chars:
+        return cleaned
+    return cleaned[:max_chars].rsplit(" ", 1)[0] + "…"
 
 
 def _get_groq() -> Groq:
@@ -108,8 +123,30 @@ def generate_rag_response(
 
     answer: str = completion.choices[0].message.content.strip()
 
-    # Deduplicate source filenames for the response
-    sources: list[str] = list({c["filename"] for c in context_chunks})
+    # Step 6 — Build structured citations, one entry per source file, keeping
+    # that file's highest-scoring chunk as the preview snippet. Skipped
+    # entirely for the "no info" fallback: those chunks were retrieved but
+    # not actually used to ground an answer, so citing them would be
+    # misleading (it would look like the answer came from those documents
+    # when the model explicitly said it couldn't answer).
+    sources: list[dict] = []
+    if answer != _NO_INFO_ANSWER:
+        best_by_file: dict[str, dict] = {}
+        for chunk in context_chunks:
+            filename = chunk["filename"]
+            if filename not in best_by_file or chunk["score"] > best_by_file[filename]["score"]:
+                best_by_file[filename] = chunk
+
+        sources = [
+            {
+                "filename": filename,
+                "snippet": _make_snippet(chunk["text"]),
+                "score": round(chunk["score"], 3),
+            }
+            for filename, chunk in sorted(
+                best_by_file.items(), key=lambda kv: kv[1]["score"], reverse=True
+            )
+        ]
 
     return {
         "answer": answer,
